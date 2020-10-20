@@ -51,6 +51,11 @@ ratings_wide3 = ratings_cut %>%
 ```
 
 ```{r}
+# write_csv
+```
+
+
+```{r}
 # sanity check
 
 ## id list
