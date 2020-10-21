@@ -16,89 +16,134 @@ glimpse(ratings)
 
 ratings %>% count(user_id) %>% nrow()  # 73515 users
 ratings %>% count(anime_id) %>% nrow() # 11200 anime 
-```
 
-
-
-```{r pivot wider}
 # drop -1 ratings, for now I thinks it is meaningless
 # 6337241 ratings ranging from 1 to 10
-ratings_cut = ratings %>% 
-  filter(rating != -1) 
+ratings_cut = ratings %>%
+  filter(rating != -1)
 
 ratings_cut %>% count(user_id) %>% nrow()  # 69600 users left
 ratings_cut %>% count(anime_id) %>% nrow() # 9927 animes left
 
-# ratings_wide1 = ratings_cut %>% 
-#   pivot_wider(names_from = user_id, values_from = rating)
-
-# ratings_wide2 = ratings_cut %>% 
-#   group_by(user_id) %>% 
-#   mutate(uniid = row_number()) %>% 
-#   pivot_wider(names_from = user_id, values_from = rating)
-
 ```
 
-```{r}
-# try this fancy method
-spec1 = ratings_cut %>% 
-  build_wider_spec(names_from = user_id, values_from = rating)
+# dont run this; might boom your macbook
 
-ratings_wide3 = ratings_cut %>%
-  pivot_wider_spec(spec1)
-
-# rating _wide1 == rating_wide3
+```{r pivot wider}
+# # ratings_wide1 = ratings_cut %>% 
+# #   pivot_wider(names_from = user_id, values_from = rating)
+# 
+# # ratings_wide2 = ratings_cut %>% 
+# #   group_by(user_id) %>% 
+# #   mutate(uniid = row_number()) %>% 
+# #   pivot_wider(names_from = user_id, values_from = rating)
+# 
+# 
+# # try this fancy method
+# spec1 = ratings_cut %>% 
+#   build_wider_spec(names_from = user_id, values_from = rating)
+# 
+# ratings_wide3 = ratings_cut %>%
+#   pivot_wider_spec(spec1)
+# 
+# # rating _wide1 == rating_wide3
+# 
+# # sanity check
+# 
+# ## id list
+# users_id = ratings_cut %>% pull(user_id) %>% unique()
+# animes_id = ratings_cut %>% pull(anime_id) %>% unique()
+# 
+# # small sample check
+# temp1 = ratings_cut %>% filter(user_id == 3) %>% select(-user_id)
+# temp2 = ratings_wide3 %>% select(anime_id, 4) %>% remove_missing()
+# # looks good
+# 
+# length(users_id)
+# 
+# # large sample check
+# 
+# 
+# sanity_check = function() {
+#   iter = 1
+#   for (u_id in users_id) {
+#   cut_temp = ratings_cut %>% filter(user_id == u_id)
+#   wide_temp = ratings_wide3 %>% select(anime_id, iter + 1) %>% remove_missing()
+#   anime_id_temp = cut_temp %>% pull(anime_id)
+#   
+#   for (a_id in anime_id_temp) {
+#     
+#     cut_anime = cut_temp %>% filter(anime_id == a_id) %>% pull(rating)
+#     wide_anime = wide_temp %>% filter(anime_id == a_id)
+#     wide_anime1 = wide_anime[1,2]
+#     wide_anime2 = wide_anime[[1]]
+#     if (cut_anime == wide_anime1) {
+#       print(paste("user", u_id, "on anime", a_id, "checked"))
+#     } else {
+#       print(paste("user", u_id, "on anime", a_id, "failed match"))
+#       break
+#     }
+#   }
+#   iter = iter + 1
+#   }
+# }
+# 
+# sanity_check()
 ```
 
-```{r}
-# write_csv
-```
 
+# feel free to run this bad boy
 
-```{r}
-# sanity check
+* We decide to downscale our data; the plan is to random select 100 users from the original dataset, and generate the new csv for python
 
-## id list
-users_id = ratings_cut %>% pull(user_id) %>% unique()
-animes_id = ratings_cut %>% pull(anime_id) %>% unique()
+```{r radom 100 users}
+# set.seed(2020)
 
-# small sample check
-temp1 = ratings_cut %>% filter(user_id == 3) %>% select(-user_id)
-temp2 = ratings_wide3 %>% select(anime_id, 4) %>% remove_missing()
-# looks good
+# (rand_100 = sample(1:73515, 100, replace = T) %>% sort())
 
-length(users_id)
-```
-
-```{r}
-# large sample check
-
-
-sanity_check = function() {
-  iter = 1
-  for (u_id in users_id) {
-  cut_temp = ratings_cut %>% filter(user_id == u_id)
-  wide_temp = ratings_wide3 %>% select(anime_id, iter + 1) %>% remove_missing()
-  anime_id_temp = cut_temp %>% pull(anime_id)
-  
-  for (a_id in anime_id_temp) {
-    
-    cut_anime = cut_temp %>% filter(anime_id == a_id) %>% pull(rating)
-    wide_anime = wide_temp %>% filter(anime_id == a_id)
-    wide_anime1 = wide_anime[1,2]
-    wide_anime2 = wide_anime[[1]]
-    if (cut_anime == wide_anime1) {
-      print(paste("user", u_id, "on anime", a_id, "checked"))
-    } else {
-      print(paste("user", u_id, "on anime", a_id, "failed match"))
-      break
-    }
-  }
-  iter = iter + 1
-  }
+sample_100_users = function(seed_in = 2000) {
+  set.seed(seed_in)
+  rand_100 = sample(1:73515, 100, replace = T) %>% sort()
+  ratings_100 = ratings %>% 
+    filter(user_id %in% rand_100)
+  # return(ratings_100)
+  .GlobalEnv$ratings_100 <- ratings_100
 }
 
-sanity_check()
+sample_100_users()
+
+ratings_100 %>% count(user_id) %>% nrow()
+ratings_100 %>% count(anime_id) %>% nrow()
+```
+
+```{r top100 users who watched most anime}
+sample_top100_users = function() {
+  rand_100 = sample(1:73515, 100, replace = T) %>% sort()
+  top_100 = ratings %>% 
+    count(user_id) %>% 
+    arrange(desc(n)) %>% 
+    slice_head(n = 100) %>% 
+    pull(user_id)
+  ratings_top_100 = ratings %>% 
+    filter(user_id %in% top_100)
+  # return(ratings_100)
+  .GlobalEnv$ratings_top_100 <- ratings_top_100
+  print("It is top 100 users, not tp 100 ratings")
+}
+
+sample_top100_users()
+
+ratings_top_100 %>% dim()
+
+ratings_top_100 %>% count(user_id) %>% nrow() #1 00 users
+ratings_top_100 %>% count(anime_id) %>% nrow() # 11059 anime
+
+write_csv(ratings_top_100, "ratings_top100_users.csv")
+```
+
+```{r}
+# sanit check
+# temp = read_csv("ratings_top100_users.csv")
 ```
 
 
