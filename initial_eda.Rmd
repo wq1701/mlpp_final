@@ -133,13 +133,28 @@ sample_top100_users = function() {
 
 sample_top100_users()
 
-ratings_top_100 %>% dim()
+ratings_top_100 %>% dim() # 173118*3
+
+
+  
 
 ratings_top_100 %>% count(user_id) %>% nrow() #1 00 users
 ratings_top_100 %>% count(anime_id) %>% nrow() # 11059 anime
 
 write_csv(ratings_top_100, "ratings_top100_users.csv")
 ```
+
+```{r}
+ratings_top_100_checkpy = read_csv("ratings_top100_users.csv")
+ratings_top_100_checkpy %>% 
+  filter(rating != -1) %>% 
+  count(user_id) # 93 user id
+
+ratings_top_100_checkpy %>% 
+  filter(rating != -1) %>% 
+  count(anime_id) # 8845 anime id
+```
+
 
 ```{r}
 # sanit check
