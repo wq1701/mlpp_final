@@ -22,12 +22,10 @@ mean_ratings = np.mean(train_vec[:, 2]) # get the mean of the ratings
 pairs_train = train_vec.shape[0] # training data length (pairs_tr)
 pairs_test = test_vec.shape[0] # test data length (pairs_pr)
 
-num_batches = 10 # Number of batches  # numbatches= 9; 
+num_batches = 50 # Number of batches
 batch_size = 100000 #batch size
 num_anime = ratings.anime_id.nunique() # Number of anime: 9927 (num_m)
-num_anime += 1
 num_users = ratings.user_id.nunique() # Number of users: 69600 (num_p)
-num_users += 1
 num_feat = 10 # number of latent features; Rank 10 decomposition (10 is faster, but 30 or higher is better)
 
 w_Item = 0.1*np.random.randn(num_anime, num_feat) # Anime feature vectors (w_Item); normal distribution
@@ -44,7 +42,7 @@ while epoch < maxepoch:
     shuffled_order = np.arange(train_vec.shape[0])  # array based on number of ratings in train data: train_vec
     np.random.shuffle(shuffled_order) # shuffle it
 
-    for batch in range(num_batches): 
+    for batch in np.arange(num_batches): 
         print('epoch %d batch %d ' % (epoch, batch+1)) # maybe too much to print for each batch
         
         test = np.arange(batch_size * batch, batch_size * (batch + 1))
@@ -53,8 +51,8 @@ while epoch < maxepoch:
         batch_UserID = np.array(train_vec[shuffled_order[batch_idx], 0], dtype='int32')
         batch_ItemID = np.array(train_vec[shuffled_order[batch_idx], 1], dtype='int32')
         
-        batch_data = np.multiply(w_User[batch_UserID, :], 
-                                 w_Item[batch_ItemID, :])
+        batch_data = np.multiply(w_User[batch_UserID - 1, :], 
+                                 w_Item[batch_ItemID - 1, :]) # need to minus one as index starts from 0
         ########## compute prediction ##########
         pred_out = np.sum(batch_data, axis = 1)
         rawErr = pred_out - (train_vec[shuffled_order[batch_idx], 2] - mean_ratings) # Default prediction is the mean rating. 
@@ -63,12 +61,12 @@ while epoch < maxepoch:
         dw_Item = np.zeros((num_anime, num_feat)) # gradient matrix of anime
         dw_User = np.zeros((num_users, num_feat)) # gradient matrix of users
         
-        Ix_User = 2 * np.multiply(rawErr[:, np.newaxis], w_Item[batch_ItemID, :]) + reg_param * w_User[batch_UserID, :] # users gradient
-        Ix_Item = 2 * np.multiply(rawErr[:, np.newaxis], w_User[batch_UserID, :]) + reg_param * (w_Item[batch_ItemID, :]) # anime gradient
+        Ix_User = 2 * np.multiply(rawErr[:, np.newaxis], w_Item[batch_ItemID -1, :]) + reg_param * (w_User[batch_UserID -1, :]) # users gradient
+        Ix_Item = 2 * np.multiply(rawErr[:, np.newaxis], w_User[batch_UserID -1, :]) + reg_param * (w_Item[batch_ItemID -1, :]) # anime gradient
         
         for i in range(batch_size): # sum gradients
-            dw_Item[batch_ItemID[i], :] += Ix_Item[i, :]
-            dw_User[batch_UserID[i], :] += Ix_User[i, :]
+            dw_Item[batch_ItemID[i] -1, :] += Ix_Item[i, :]
+            dw_User[batch_UserID[i] -1, :] += Ix_User[i, :]
         
         ########## update users and anime feature (with momentum)##########
         w_User_inc = momentum * w_User_inc + epsilon * dw_User / batch_size;
@@ -79,8 +77,8 @@ while epoch < maxepoch:
         
         ########## compute prediction after updates ########## (this part could be optimized)
         if batch == num_batches - 1:
-            pred_out = np.sum(np.multiply(w_User[np.array(train_vec[:, 0], dtype='int32'), :],
-                                          w_Item[np.array(train_vec[:, 1], dtype='int32'), :]), axis=1)
+            pred_out = np.sum(np.multiply(w_User[np.array(train_vec[:, 0] -1, dtype='int32'), :],
+                                          w_Item[np.array(train_vec[:, 1] -1, dtype='int32'), :]), axis=1)
             rawErr = pred_out - (train_vec[:, 2] - mean_ratings)
             obj = np.linalg.norm(rawErr) ** 2 + 0.5 * reg_param * (np.linalg.norm(w_User) ** 2 + np.linalg.norm(w_Item) ** 2)
                 
@@ -88,14 +86,14 @@ while epoch < maxepoch:
                 
         ########## Compute test error ########## (this part could be optimized)
         if batch == num_batches - 1:
-            pred_out = np.sum(np.multiply(w_User[np.array(test_vec[:, 0], dtype='int32'), :],
-                                          w_Item[np.array(test_vec[:, 1], dtype='int32'), :]), axis=1)  
+            pred_out = np.sum(np.multiply(w_User[np.array(test_vec[:, 0] -1, dtype='int32'), :],
+                                          w_Item[np.array(test_vec[:, 1] -1, dtype='int32'), :]), axis=1)  
             rawErr = pred_out - (test_vec[:, 2] - mean_ratings)
             rmse_test.append(np.linalg.norm(rawErr) / np.sqrt(pairs_test))
             
         ########## Print info ########## (this part could be optimized)
         if batch == num_batches - 1:
-            print('The epoch: %f, Training RMSE: %f, Test RMSE %f' % (epoch, rmse_train[-1], rmse_test[-1]))
+            print('The epoch: %d, Training RMSE: %f, Test RMSE %f' % (epoch, rmse_train[-1], rmse_test[-1]))
         
     # if epoch % 10 == 0: 
         
@@ -104,4 +102,5 @@ while epoch < maxepoch:
 # save the users & anime feature for MCMC #
 ############ ################# ############
 
-
+np.savetxt('./pmf_weights/users_feature.csv', w_User, delimiter=',')
+np.savetxt('./pmf_weights/anime_feature.csv', w_Item, delimiter=',')
