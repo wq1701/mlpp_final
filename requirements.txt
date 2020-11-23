@@ -75,3 +75,4 @@ urllib3==1.25.10
 wcwidth==0.2.5
 webencodings==0.5.1
 widgetsnbextension==3.5.1
+scikit-learn==0.22
