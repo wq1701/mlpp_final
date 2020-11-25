@@ -4,7 +4,7 @@
 #         "../small_data/ratings_100_200_real.csv",
 #         split = True)
 
-def run_GaussianMF(anime_matrix_train, anime_data_test, k, method = "svi"): 
+def run_GaussianMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.05, n_steps = 1000, mae_tol = 0.02): 
     import logging
     import os
     import warnings
@@ -100,7 +100,7 @@ def run_GaussianMF(anime_matrix_train, anime_data_test, k, method = "svi"):
         pyro.sample("sigma", dist.Normal(sigma_loc, sigma_scale))
         
     
-    def train_via_opt_map(model, guide, lr=0.05, n_steps = 2000, mae_tol = 0.05):
+    def train_via_opt_map(model, guide):
         pyro.clear_param_store()
         svi = SVI(model, guide, optim.Adam({"lr": lr}), loss=Trace_ELBO())
         
@@ -123,7 +123,7 @@ def run_GaussianMF(anime_matrix_train, anime_data_test, k, method = "svi"):
                 print('[iter {}]  loss: {:.4f} Test MAE: {:.4f}'.format(step, loss, MAE))
         return(loss_list, mae_list)
     
-    def train_via_opt_svi(model, guide, lr=0.05, n_steps = 2000, mae_tol = 0.02):
+    def train_via_opt_svi(model, guide):
         pyro.clear_param_store()
         svi = SVI(model, guide, optim.Adam({"lr": lr}), loss=Trace_ELBO())
 

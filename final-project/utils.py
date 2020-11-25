@@ -10,7 +10,11 @@ def load_makematrix(path_in_str, split = False, test_ratio = 0.1, random_seed = 
         data_train, data_test = train_test_split(data_full, test_size = test_ratio, random_state = random_seed)
         data_train_matrix = data_train.pivot(index='user_id', columns='anime_id', values='rating')
     
-    return data_full, data_train, data_test, data_train_matrix
+        return data_full, data_train_matrix, data_test
+    
+    else:
+        data_matrix = data_full.pivot(index='user_id', columns='anime_id', values='rating')
+        return data_full, data_matrix
     
     
 
