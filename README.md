@@ -14,7 +14,7 @@ The data is from the [Anime Recommendations Database](https://www.kaggle.com/Coo
   - `rating`
 - The `anime.csv` contains detailed information about anime
 
-# Development
+## Development
 
 Python 3.8.5
 
