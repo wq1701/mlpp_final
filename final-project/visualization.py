@@ -21,5 +21,16 @@ def learning_curve_plot(loss_list, mae_list, title = 'Learning Curve of \n Norma
     fig.legend()
     plt.grid()
     plt.show()
+    
+
+def U_V_visualization(u = "u_mean", v = "v_mean", title = "U and V Visualization of Normal Model SVI Method"):
+    import matplotlib.pyplot as plt
+    
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    fig.suptitle(title)
+    ax1.imshow(pyro.param("u_mean").t().detach().numpy(), interpolation='nearest')
+    ax1.set_title("U Transpose")
+    ax2.imshow(pyro.param("v_mean").t().detach().numpy(), interpolation='nearest')
+    ax2.set_title("V Transpose")
 
 
