@@ -1,6 +1,6 @@
 # Poisson prior
 
-def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.05, n_steps = 1000, mae_tol = 0.02): 
+def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.05, n_steps = 1000, mae_tol = 0.05): 
     import logging
     import os
     import warnings
@@ -64,7 +64,7 @@ def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.0
                     pyro.sample("obs", dist.Poisson(expectation), 
                             obs = valid_matrix)
 
-    def guide_svi_pois(anime_matrix_train, k = k):
+    def guide_svi(anime_matrix_train, k = k):
     
         m = anime_matrix_train.shape[0]
         n = anime_matrix_train.shape[1]
@@ -78,7 +78,7 @@ def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.0
         pyro.sample("u", dist.Normal(u_mean, u_sigma).to_event(2))
         pyro.sample("v", dist.Normal(v_mean, v_sigma).to_event(2))
     
-    def train_via_opt(model, guide):
+    def train_via_opt_svi(model, guide):
         pyro.clear_param_store()
         svi = SVI(model, guide, optim.Adam({"lr": lr}), loss=Trace_ELBO())
 
@@ -101,10 +101,20 @@ def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.0
                 print('[iter {}]  loss: {:.4f} Test MAE: {:.4f}'.format(step, loss, MAE))
         return(loss_list, mae_list) 
     
-    # if method == "map":
-    #     loss_list, mae_list = train_via_opt_map(matrix_factorization_normal, guide_map)
+    def hmc(matrix_factorization_poisson, num_samples=1000, warmup_steps=200):
+        nuts_kernel = NUTS(matrix_factorization_poisson)
+        mcmc = MCMC(nuts_kernel, num_samples=1000, warmup_steps=200)
+        mcmc.run(anime_matrix_train.values, k = k)
+        hmc_samples = {k: v.detach().cpu().numpy() for k, v in mcmc.get_samples().items()}
+        return hmc_samples
+    
+    
+#     if method == "map":
+#          loss_list, mae_list = train_via_opt_map(matrix_factorization_poisson, guide_map)
     if method == "svi":
-        loss_list, mae_list = train_via_opt_svi(matrix_factorization_normal, guide_svi)
+        loss_list, mae_list = train_via_opt_svi(matrix_factorization_poisson, guide_svi)
+    if method == "hmc":
+        return hmc(matrix_factorization_poisson, num_samples=1000, warmup_steps=200)
 
     return loss_list, mae_list
 

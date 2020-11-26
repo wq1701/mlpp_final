@@ -24,6 +24,7 @@ def learning_curve_plot(loss_list, mae_list, title = 'Learning Curve of \n Norma
     
 
 def U_V_visualization(u = "u_mean", v = "v_mean", title = "U and V Visualization of Normal Model SVI Method"):
+    import pyro
     import matplotlib.pyplot as plt
     
     fig, (ax1, ax2) = plt.subplots(2, 1)

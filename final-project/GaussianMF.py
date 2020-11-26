@@ -142,9 +142,20 @@ def run_GaussianMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.
                 print('[iter {}]  loss: {:.4f} Test MAE: {:.4f}'.format(step, loss, MAE))
         return(loss_list, mae_list)
     
+    def hmc(matrix_factorization_normal, num_samples=1000, warmup_steps=200):
+        nuts_kernel = NUTS(matrix_factorization_normal)
+        mcmc = MCMC(nuts_kernel, num_samples=1000, warmup_steps=200)
+        mcmc.run(anime_matrix_train.values, k = k)
+        hmc_samples = {k: v.detach().cpu().numpy() for k, v in mcmc.get_samples().items()}
+        return hmc_samples
+    
+    
     if method == "map":
         loss_list, mae_list = train_via_opt_map(matrix_factorization_normal, guide_map)
     if method == "svi":
         loss_list, mae_list = train_via_opt_svi(matrix_factorization_normal, guide_svi)
+    if method == "hmc":
+        return hmc(matrix_factorization_normal, num_samples=1000, warmup_steps=200)
+        
 
     return loss_list, mae_list
