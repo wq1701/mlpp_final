@@ -33,5 +33,14 @@ def U_V_visualization(u = "u_mean", v = "v_mean", title = "U and V Visualization
     ax1.set_title("U Transpose")
     ax2.imshow(pyro.param("v_mean").t().detach().numpy(), interpolation='nearest')
     ax2.set_title("V Transpose")
-
-
+    fig.subplots_adjust(right=0.8)
+    fig.colorbar(ax1.imshow(pyro.param("u_mean").t().detach().numpy(), interpolation='nearest'),
+                orientation="horizontal")
+    fig.tight_layout()
+    
+    
+    
+    
+    
+    
+    
