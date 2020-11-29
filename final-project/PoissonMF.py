@@ -1,6 +1,6 @@
 # Poisson prior
 
-def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.05, n_steps = 1000, mae_tol = 0.05): 
+def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.05, n_steps = 2000, mae_tol = 0.05): 
     import logging
     import os
     import warnings
@@ -92,7 +92,7 @@ def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.0
                 r = r.item()
                 pred.append(r)
             MAE = mae(anime_data_test.rating, pred)
-            if step > 100 and MAE - min(mae_list) > mae_tol:
+            if step > 1500 and MAE - min(mae_list) > mae_tol:
                 print('[stop at iter {}]  loss: {:.4f} Test MAE: {:.4f}'.format(step, loss, MAE))
                 break
             loss_list.append(loss)
