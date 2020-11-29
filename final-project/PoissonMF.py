@@ -90,6 +90,8 @@ def run_PoissonMF(anime_matrix_train, anime_data_test, k, method = "svi", lr=0.0
             for i,j in anime_data_test[["user_id", "anime_id"]].itertuples(index=False):
                 r = torch.dot(pyro.param("u_mean")[i-1, :], pyro.param("v_mean")[j-1, :])
                 r = r.item()
+                if r > 10:
+                    r = 10
                 pred.append(r)
             MAE = mae(anime_data_test.rating, pred)
             if step > 1500 and MAE - min(mae_list) > mae_tol:
