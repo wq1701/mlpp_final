@@ -1,4 +1,4 @@
-def learning_curve_plot(loss_list, mae_list, title = 'Learning Curve of \n Normal Model'):
+def learning_curve_plot(loss_list, mae_list, title = 'Learning Curve of \n Gaussian Model'):
     import matplotlib.pyplot as plt
     
     fig, ax1 = plt.subplots()
@@ -36,8 +36,6 @@ def U_V_visualization(u = "u_mean", v = "v_mean", title = "U and V Visualization
     fig.subplots_adjust(right=0.8)
     fig.colorbar(ax1.imshow(pyro.param("u_mean").t().detach().numpy(), interpolation='nearest'),
                 orientation="horizontal")
-    fig.tight_layout()
-    
     
     
     
