@@ -44,3 +44,14 @@ def latent_viz(u="u_mean", v="v_mean",
     fig.colorbar(ax1.imshow(pyro.param("u_mean").t().detach().numpy(),
                             interpolation='nearest'),
                  orientation="horizontal")
+
+def hist_comparison(true_ratings, pred_ratings, title = "Gaussian Model"):
+    import pyro
+    import matplotlib.pyplot as plt
+    
+    plt.hist(true_ratings, bins=20, alpha=0.7, label = "Real Ratings")
+    plt.hist(pred_ratings, bins=20, alpha=0.7, label = "Predicted Ratings")
+    plt.legend(prop={'size': 16})
+    plt.title(title)
+    plt.xlabel('Rating')
+    plt.show()
