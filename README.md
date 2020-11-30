@@ -38,7 +38,7 @@ To run final-notebook
 To run future work script
 
 ```
-cd future-work
+$ cd future-work
 (venv)$ python pmf_semi_pyro_largescale.py
 ```
 
